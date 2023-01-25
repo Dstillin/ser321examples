@@ -15,6 +15,8 @@ write a response back
 */
 
 package funHttpServer;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.net.*;
@@ -206,6 +208,7 @@ class WebServer {
           Integer num2 = Integer.parseInt(query_pairs.get("num2"));
 
           // do math
+          try{
           Integer result = num1 * num2;
 
           // Generate response
@@ -213,11 +216,14 @@ class WebServer {
           builder.append("Content-Type: text/html; charset=utf-8\n");
           builder.append("\n");
           builder.append("Result is: " + result);
+          }catch(ArithmeticException e) {
+            System.out.println();
+          }
 
           // TODO: Include error handling here with a correct error code and
           // a response that makes sense
 
-        } else if (request.contains("github?")) {
+        } else if (request.contains("github?query=users/amelhase316/repos")) {
           // pulls the query from the request and runs it with GitHub's REST API
           // check out https://docs.github.com/rest/reference/
           //
@@ -228,8 +234,26 @@ class WebServer {
 
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
           query_pairs = splitQuery(request.replace("github?", ""));
+          try{
           String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
-          System.out.println(json);
+          JSONArray arr = new JSONArray(json);
+          for (int x = 0; x< arr.length(); x++)  {
+            JSONObject repo = arr.getJSONObject(x);
+            String repoName = repo.getString("name");
+            builder.append("Repo name: " + repoName);
+            JSONObject repoOwner = repo.getJSONObject("owner");
+            String ownerName = repoOwner.getString("owner name");
+            builder.append("Owner name: " + ownerName);
+            JSONObject repoID = repo.getJSONObject("repoID");
+            String repoId = repoID.getString("ID");
+            builder.append("Repo ID: " + repoId);
+
+
+          }
+        }catch (Exception e)  {
+builder.append("HTTP/1.1 400");
+        }
+          //System.out.println(json);
 
           builder.append("HTTP/1.1 200 OK\n");
           builder.append("Content-Type: text/html; charset=utf-8\n");
